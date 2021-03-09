@@ -3,7 +3,7 @@ module OSF
 using HTTP
 using JSON
 
-export osfget, osfput, osfcontents, osfprint, osfheaders, osftree
+export osfget, osfput, osfcontents, osfprint, osfheaders, osftree, osfupload
 
 const osfurl = "https://api.osf.io/v2/nodes"
 const default_osfheaders = ["Content-Type" => "application/vnd.api+json"]
@@ -48,6 +48,7 @@ function osfupload(files, remote_id; headers = default_osfheaders, rootdir = "")
         createfolder(dirname(remotefile), remotetree, headers)
         createfile(file, remotefile, remotetree, headers)
     end
+    return remotetree
 end
 
 function createfolder(folder, remotetree, headers)
@@ -66,7 +67,6 @@ function createfolder(folder, remotetree, headers)
         end
         lastpath = subpath
     end
-    return
 end
 
 function createfile(path, remotepath, remotetree, headers)
@@ -77,7 +77,6 @@ function createfile(path, remotepath, remotetree, headers)
         osfput(uploadurl, headers, io)
     end
     remotetree[remotepath] = response["data"]["links"]
-    return
 end
 
 function cumulativepath(pathparts)
