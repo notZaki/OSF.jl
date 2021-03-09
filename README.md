@@ -6,3 +6,76 @@
 [![Coverage](https://codecov.io/gh/notZaki/OSF.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/notZaki/OSF.jl) -->
 
 Work-in-progress code for up/downloading data from [OSF](https://osf.io/) through Julia.
+
+To install:
+```
+julia> ]add https://github.com/notZaki/OSF.jl
+```
+
+To use:
+```
+julia> using OSF
+```
+
+## Examples
+
+**Accessing files on OSF repository**
+
+Get list of remote files in OSF repository:
+
+```julia
+repo_id = "rpydu" # ID of OSF repository (part of URL on osf.io)
+remotefiles = osftree(repo_id)
+```
+
+The `remotefiles` variable is a dictionary which maps `remote file path` with API endpoints:
+```julia
+remote_file_paths = keys(remotefiles) 
+available_endpoints = keys(remotefiles["/README.md"]) # ["delete", "upload", "download", "info", "move", ...]
+
+# Download URL for README.md:
+remotefiles["/README.md"]["download"]
+```
+
+The practical application of the above is if we only want to download specific files from a large OSF repository. We can filter `remotefiles` so that it only contains the desired files, and then download them.
+
+**Uploading files to OSF repository**
+
+The following snippet will recursively upload everything in `rootdir` to an empty OSF repository with an id of `repo_id`. The empty repository should be created beforehand.
+
+But first, a personal access token for OSF must be generated [from here](https://osf.io/settings/tokens). Then, it can either be saved to a file, or pasted into a `headers` variable. Both cases are shown below.
+
+```julia
+# Method A: Save the token to a file first, and then load it
+const tokenpath = "/path/to/token/file"
+headers = osfheaders(tokenpath)
+
+# Method B: Paste the token directly into Julia
+headers = [
+    "Authorization" => "Bearer PUT_YOUR_TOKEN_HERE",
+    "Content-Type" => "application/vnd.api+json"
+]
+```
+
+Once the `headers` variable is created, the following snippet can be run:
+
+```julia
+# Helper function to crawl local folder
+function get_files(rootdir)
+    curdir = pwd()
+    allfiles = String[]
+    for (root, dirs, files) in walkdir(rootdir)
+        for file in files
+            push!(allfiles, joinpath(root,file))
+        end
+    end
+    return allfiles
+end
+
+# Collect local folders/files
+rootdir = "/path/to/folder" # Do NOT put trailing slash
+myfiles = sort(get_files(rootdir))
+
+repo_id = "id of empty OSF repository"
+remotefiles = OSF.osfupload(myfiles, repo_id; headers, rootdir)
+```
