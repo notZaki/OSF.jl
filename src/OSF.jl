@@ -28,17 +28,13 @@ function crawler(storage)
     for file in files
       contents[getname(file)] = getlinks(file)
     end
-    nextpage = storage["links"]["next"]
-    while !isnothing(nextpage)
-        nextstorage = osfget(nextpage)
-        nextpage = nextstorage["links"]["next"]
-        for file in nextstorage["data"]
-            contents[getname(file)] = getlinks(file)
-        end
-    end
     for folder in folders
         contents[getname(folder)] = getlinks(folder)
         merge!(contents, crawler(osfget(getsubfolder(folder))))
+    end
+    nextpage = storage["links"]["next"]
+    if !isnothing(nextpage)
+        merge!(contents, crawler(osfget(nextpage)))
     end
     return contents
 end
@@ -47,6 +43,10 @@ end
 # Uploads `files` to osf repository
 function osfupload(files, remote_id; headers = default_osfheaders, rootdir = "")
     remotetree = osftree(remote_id)
+    return osfupload(files, remote_id, remotetree; headers, rootdir)
+end
+
+function osfupload(files, remote_id, remotetree; headers = default_osfheaders, rootdir = "")
     for file in files
         remotefile = replace(file, rootdir => "")
         if remotefile ∈ getfilenames(remotetree)
@@ -58,6 +58,7 @@ function osfupload(files, remote_id; headers = default_osfheaders, rootdir = "")
     end
     return remotetree
 end
+
 
 function createfolder(folder, remotetree, headers)
     folder = confirmpath(folder)
