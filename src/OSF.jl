@@ -26,7 +26,15 @@ function crawler(storage)
     files = filter(isfile, storage["data"])
     folders = filter(isfolder, storage["data"])
     for file in files
-        contents[getname(file)] = getlinks(file)
+      contents[getname(file)] = getlinks(file)
+    end
+    nextpage = storage["links"]["next"]
+    while !isnothing(nextpage)
+        nextstorage = osfget(nextpage)
+        nextpage = nextstorage["links"]["next"]
+        for file in nextstorage["data"]
+            contents[getname(file)] = getlinks(file)
+        end
     end
     for folder in folders
         contents[getname(folder)] = getlinks(folder)
