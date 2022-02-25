@@ -81,7 +81,7 @@ end
 function createfile(path, remotepath, remotetree, headers)
     folder = confirmpath(dirname(remotepath))
     filename = basename(remotepath)
-    uploadurl = remotetree[folder]["upload"] * "?kind=file&name=$filename"
+    uploadurl = remotetree[folder]["upload"] * "&name=$filename"
     response = open(path, "r") do io
         osfput(uploadurl, headers, io)
     end
