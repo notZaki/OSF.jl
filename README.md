@@ -103,7 +103,7 @@ remotefiles = osftree(id)
 manifest = OrderedDict{String, String}()
 
 for key in sort(collect(keys(remotefiles)))
-    value = remotecontent[key]
+    value = remotefiles[key]
     if haskey(value, "download")
         manifest[key] = value["download"]
     end
