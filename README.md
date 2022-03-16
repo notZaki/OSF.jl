@@ -19,7 +19,7 @@ julia> using OSF
 
 ## Examples
 
-**Accessing files on OSF repository**
+### Accessing files on OSF repository
 
 Get list of remote files in OSF repository:
 
@@ -39,7 +39,7 @@ remotefiles["/README.md"]["download"]
 
 The practical application of the above is if we only want to download specific files from a large OSF repository. We can filter `remotefiles` so that it only contains the desired files, and then download them.
 
-**Uploading files to OSF repository**
+### Uploading files to OSF repository
 
 The following snippet will recursively upload everything in `rootdir` to an empty OSF repository with an id of `repo_id`. The empty repository should be created beforehand.
 
@@ -78,4 +78,39 @@ myfiles = sort(get_files(rootdir))
 
 repo_id = "id of empty OSF repository"
 remotefiles = OSF.osfupload(myfiles, repo_id; headers, rootdir)
+```
+
+### Creating a manifest file for an existing repository
+
+The OSF api could be difficult to use for filtering/downloading files in a large repository. A workaround is to create a json file that pairs each file on the repo with its download link. This json file can then be parsed/filtered by any other tool of choice.
+
+To create such a json file, first install the following packages
+```julia
+julia> ]add JSON
+julia> ]add OrderedCollections
+```
+
+and then the following script will produce a json file:
+```julia
+using OSF
+using JSON
+using OrderedCollections
+
+id = "ENTER THE ~5 CHAR REPO ID"
+remotefiles = osftree(id)
+
+# Sort files by path name
+manifest = OrderedDict{String, String}()
+
+for key in sort(collect(keys(remotefiles)))
+    value = remotecontent[key]
+    if haskey(value, "download")
+        manifest[key] = value["download"]
+    end
+end
+
+# Save as json
+open("manifest.json","w") do f
+    JSON.print(f, manifest, 2)
+end
 ```
